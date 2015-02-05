@@ -8,7 +8,7 @@ TILE_WIDTH = 8
 
 #Note that this takes a Pillow Image and returns a NumPy boolean array
 def convertImage(image):
-	return np.array(image.resize((128, 64), Image.ANTIALIAS).convert("1"))
+	return np.array(image.resize((128, 64), Image.ANTIALIAS).convert("1").getdata()).reshape((64,128)).astype(bool)
 
 
 
@@ -38,7 +38,7 @@ def cropImage(npImg):
 	return newImage, npImg.shape
 
 # I wanted to put this at the top but no! Python wouldn't let me
-tileset = cropImage(np.array(Image.open("resources/tileset.png").convert("1")))[0] # This will be an array of 1s and 0s
+tileset = cropImage(np.array(Image.open("resources/tileset.png").convert("1").getdata()).reshape((128,96)).astype(bool))[0] # This will be a boolean array array
 
 def asciiize(npImg):
 	npImg = cropImage(npImg)
