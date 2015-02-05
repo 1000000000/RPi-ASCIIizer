@@ -45,4 +45,7 @@ The program will be written in Python (it would incur significant difficulties t
 * Write library to allow Pi to control LCD screen (ST7565) 
 * Attach LCD screen to Pi
 
-
+---
+###Project Summary:
+####Fixing the ASCIIizing
+There were a number of bugs in the program that resulted in the ASCIIizing process giving bad output. First I was creating a NumPy array out of the PIL image using `np.array(image)`. This did not create a NumPy array with the values of the pixels as I had expected. Further research led me to change that to `np.array(image.getData()).reshape(w,h)`. After that was fixed I also had to change my code where I was using `Image.fromarray(numpyArray)` because that didn't work like I expected either and created a garbage image as output. So I instead used SciPy's `misc.imsave(numpyArray)` to save the image. The final problem with ASCIIizing occurred at the end of the ASCIIization process. During the process I store the image as a one-dimensional array of 6x8 rectangles. At the end of the ASCIIization process I put them back together to form the image. I was using `npImage.reshape((w, h))` to put it get it back in the right shape but that did not put the pixels in the right order. The ASCIIizing finally worked correctly when I replaced that operation with one that was more similar to the process that I used to break the image up into pieces.
