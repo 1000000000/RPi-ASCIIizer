@@ -76,5 +76,5 @@ def getSimilarity(img,ascii):
 if __name__ == "__main__":
 	newImage = convertImage(Image.open("resources/image.png"))
 	asciiImage = asciiize(newImage)
-	misc.imsave("bit.png", newImage.astype(np.uint8)*255)
+	misc.imsave("bit.png", newImage.astype(np.uint8)*255) # saving using scipy cause array to PIL image conversion is weird
 	misc.imsave("ascii.png", asciiImage.astype(np.uint8)*255)
