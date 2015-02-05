@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import ndimage
+from scipy import misc
 from PIL import Image
 from math import copysign
 
@@ -72,5 +72,5 @@ def getSimilarity(img,ascii):
 if __name__ == "__main__":
 	newImage = convertImage(Image.open("resources/image.png"))
 	asciiImage = asciiize(newImage)
-	Image.fromarray(newImage, mode="1").save("bit.png")
-	Image.fromarray(asciiImage, mode="1").save("ascii.png")
+	misc.imsave("bit.png", newImage.astype(np.uint8)*255)
+	misc.imsave("ascii.png", asciiImage.astype(np.uint8)*255)
