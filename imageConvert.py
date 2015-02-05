@@ -14,7 +14,6 @@ def convertImage(image):
 
 # Takes a 2D NumPy array and returns a 8x6x?? NumPy array
 def cropImage(npImg):
-#	import pdb; pdb.set_trace()
         numRow = npImg.shape[0]
         extraRow = (numRow % 8)//2
         rowToRemove = range(extraRow) + range(numRow - extraRow, numRow)
@@ -44,7 +43,6 @@ def asciiize(npImg):
 	npImg = cropImage(npImg)
 	image = npImg[0]
 	newImage = np.empty(image.shape, dtype=bool)
-#	import pdb; pdb.set_trace()
 	for b in range(0,image.shape[0]):
 		print "Starting block " + str(b) + "/" + str(image.shape[0])
 		goodTile = tileset[0]
@@ -55,7 +53,13 @@ def asciiize(npImg):
 				high = sim
 				goodTile = tile
 		newImage[b] = np.logical_xor(goodTile, np.sign(high) < 0)
-	return newImage.reshape(npImg[1][0],npImg[1][1])
+	doneImage = np.empty(npImg[1], dtype=bool)
+	i = 0
+	for r in range(0, npImg[1][0], 8):
+		for c in range(0, npImg[1][1], 6):
+			doneImage[r:r+8,c:c+6] = newImage[i]
+			i += 1
+	return doneImage
 
 def getSimilarity(img,ascii):
 	if img.shape != ascii.shape:
