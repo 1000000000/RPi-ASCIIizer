@@ -41,6 +41,7 @@ The program will be written in Python (it would incur significant difficulties t
 ####Issues:
 * The process of ASCIIizing the image is slower than I would like
 * The result of ASCIIizing is incorrect
+    * The reason for this is the conversion of the PIL image to a NumPy array does not work as I expected
 
 ####Long Term Plans:
 * Write library to allow Pi to control LCD screen (ST7565) 
