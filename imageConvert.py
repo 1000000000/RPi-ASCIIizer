@@ -6,6 +6,8 @@ from math import copysign
 TILE_WIDTH = 6
 TILE_WIDTH = 8
 
+REDUNDANT_TILES = [8, 10, 32, 220, 222, 223, 255]
+
 #Note that this takes a Pillow Image and returns a NumPy boolean array
 def convertImage(image):
 	return np.array(image.resize((128, 64), Image.ANTIALIAS).convert("1").getdata()).reshape((64,128)).astype(bool)
@@ -47,11 +49,13 @@ def asciiize(npImg):
 		print "Starting block " + str(b) + "/" + str(image.shape[0])
 		goodTile = tileset[0]
 		high = 0
-		for tile in tileset:
-			sim = getSimilarity(image[b],tile)
+		for i in range(256):
+			if i in REDUNDANT_TILES:
+				continue
+			sim = getSimilarity(image[b],tileset[i])
 			if abs(sim) > abs(high):
 				high = sim
-				goodTile = tile
+				goodTile = tileset[i]
 		newImage[b] = np.logical_xor(goodTile, np.sign(high) < 0)
 	doneImage = np.empty(npImg[1], dtype=bool)
 	i = 0
