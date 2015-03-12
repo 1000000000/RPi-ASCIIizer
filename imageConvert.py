@@ -4,7 +4,7 @@ from PIL import Image
 from math import copysign
 
 TILE_WIDTH = 6
-TILE_WIDTH = 8
+TILE_HEIGHT = 8
 
 REDUNDANT_TILES = [8, 10, 32, 220, 222, 223, 255]
 
