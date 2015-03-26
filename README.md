@@ -37,9 +37,7 @@ The program will be written in Python (it would incur significant difficulties t
         * http://effbot.org/imagingbook/image.htm#tag-Image.Image.resize
 * Attach camera to Pi
 * Capture when a button is pressed and process those images using the above program
-
-####Issues:
-* The process of ASCIIizing the image is slower than I would like
+* Made program complete in a reasonable amount of time.
 
 ####Long Term Plans:
 * Write library to allow Pi to control LCD screen (ST7565) 
