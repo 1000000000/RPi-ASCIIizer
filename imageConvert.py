@@ -1,3 +1,4 @@
+import os.path
 import numpy as np
 from scipy import misc
 from PIL import Image
@@ -6,12 +7,21 @@ from math import copysign
 TILE_WIDTH = 6
 TILE_HEIGHT = 8
 
-REDUNDANT_TILES = [8, 10, 32, 220, 222, 223, 255]
+TILESET_FILE = "resources/tileset.npy"
+TILESET_IMAGE = "resources/tileset-img.npy"
 
-#Note that this takes a Pillow Image and returns a NumPy boolean array
+# Make sure the tileset array file exists. If not create it from the tileset image
+def loadTileset():
+	if not os.path.isfile(TILESET_FILE) or not os.path.isfile(TILESET_IMAGE):
+		import tilesetImgToNumpy as toNumpy
+		toNumpy.convertToNumpy("resources/tileset.png")
+	tileset = np.load(TILESET_FILE) # This will be a boolean array array
+	tilesetImg = np.load(TILESET_IMAGE) # This will be a boolean array array array (An array of tiles which are 2D boolean array)
+	return tileset, tilesetImg
+
+#Note that this takes a Pillow Image and returns a NumPy boolean array of the image scaled to fit on the LCD screen
 def convertImage(image):
 	return np.array(image.resize((128, 64), Image.ANTIALIAS).convert("1").getdata()).reshape((64,128)).astype(bool)
-
 
 
 # Takes a 2D NumPy array and returns a 8x6x?? NumPy array
@@ -38,25 +48,19 @@ def cropImage(npImg):
 			i += 1
 	return newImage, npImg.shape
 
-# I wanted to put this at the top but no! Python wouldn't let me
-tileset = cropImage(np.array(Image.open("resources/tileset.png").convert("1").getdata()).reshape((128,96)).astype(bool))[0] # This will be a boolean array array
 
 def asciiize(npImg):
+	tileset, tilesetImg = loadTileset()
 	npImg = cropImage(npImg)
 	image = npImg[0]
 	newImage = np.empty(image.shape, dtype=bool)
-	for b in range(0,image.shape[0]):
+	for b in range(image.shape[0]):
 		print "Starting block " + str(b) + "/" + str(image.shape[0])
-		goodTile = tileset[0]
-		high = 0
-		for i in range(256):
-			if i in REDUNDANT_TILES:
-				continue
-			sim = getSimilarity(image[b],tileset[i])
-			if abs(sim) > abs(high):
-				high = sim
-				goodTile = tileset[i]
-		newImage[b] = np.logical_xor(goodTile, np.sign(high) < 0)
+		acc = np.full(tileset.shape[1], -2*np.sum(image[b]) + image[b].size)
+		for i in range(image[b].size):
+			acc += 2*tileset[i]*(2*image[b].flat[i] - 1)
+		bestTile = np.argmax(np.absolute(acc))
+		newImage[b] = np.logical_xor(tilesetImg[bestTile], np.sign(acc[bestTile]) < 0)
 	doneImage = np.empty(npImg[1], dtype=bool)
 	i = 0
 	for r in range(0, npImg[1][0], 8):
@@ -65,6 +69,7 @@ def asciiize(npImg):
 			i += 1
 	return doneImage
 
+"""
 def getSimilarity(img,ascii):
 	if img.shape != ascii.shape:
 		print "Image and tile are not the same size!"
@@ -76,6 +81,7 @@ def getSimilarity(img,ascii):
 		else:
 			count -= 1
 	return count
+"""
 
 if __name__ == "__main__":
 	newImage = convertImage(Image.open("resources/image.png"))
