@@ -27,7 +27,7 @@ def convertImage(image):
 # Takes a 2D NumPy array and returns a 8x6x?? NumPy array
 def cropImage(npImg):
         numRow = npImg.shape[0]
-        extraRow = (numRow % 8)//2
+        extraRow = (numRow % TILE_HEIGHT)//2
         rowToRemove = range(extraRow) + range(numRow - extraRow, numRow)
         if (numRow % 2) == 1:
 		#print type(rowToRemove)
@@ -35,16 +35,16 @@ def cropImage(npImg):
         npImg = np.delete(npImg, rowToRemove, 0)
 
         numCol = npImg.shape[1]
-        extraCol = (numCol % 6)//2
+        extraCol = (numCol % TILE_WIDTH)//2
         colToRemove = range(extraCol) + range(numCol - extraCol, numCol)
         if (numCol % 2) == 1:
                 colToRemove.append(extraCol)
         npImg = np.delete(npImg, colToRemove, 1)
-	newImage = np.empty((npImg.size//48,8,6), dtype=bool)
+	newImage = np.empty((npImg.size//(TILE_WIDTH*TILE_HEIGHT),TILE_HEIGHT,TILE_WIDTH), dtype=bool)
 	i = 0
-	for r in range(0, npImg.shape[0], 8):
-		for c in range(0, npImg.shape[1], 6):
-			newImage[i] = npImg[r:r+8,c:c+6]
+	for r in range(0, npImg.shape[0], TILE_HEIGHT):
+		for c in range(0, npImg.shape[1], TILE_WIDTH):
+			newImage[i] = npImg[r:r+TILE_HEIGHT,c:c+TILE_WIDTH]
 			i += 1
 	return newImage, npImg.shape
 
@@ -63,25 +63,12 @@ def asciiize(npImg):
 		newImage[b] = np.logical_xor(tilesetImg[bestTile], np.sign(acc[bestTile]) < 0)
 	doneImage = np.empty(npImg[1], dtype=bool)
 	i = 0
-	for r in range(0, npImg[1][0], 8):
-		for c in range(0, npImg[1][1], 6):
-			doneImage[r:r+8,c:c+6] = newImage[i]
+	for r in range(0, npImg[1][0], TILE_HEIGHT):
+		for c in range(0, npImg[1][1], TILE_WIDTH):
+			doneImage[r:r+TILE_HEIGHT,c:c+TILE_WIDTH] = newImage[i]
 			i += 1
 	return doneImage
 
-"""
-def getSimilarity(img,ascii):
-	if img.shape != ascii.shape:
-		print "Image and tile are not the same size!"
-		return 0
-	count = 0
-	for i in range(img.size):
-		if img.flat[i] == ascii.flat[i]:
-			count += 1
-		else:
-			count -= 1
-	return count
-"""
 
 if __name__ == "__main__":
 	newImage = convertImage(Image.open("resources/image.png"))
