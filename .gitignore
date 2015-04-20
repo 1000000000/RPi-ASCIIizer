@@ -4,6 +4,7 @@
 # Image files created when the program runs
 bit.png
 ascii.png
+orig.png
 
 #For OSX
 .DS_Store
