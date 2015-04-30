@@ -56,7 +56,7 @@ def asciiize(npImg):
 	newImage = np.empty(image.shape, dtype=bool)
 	for b in range(image.shape[0]):
 		print "Starting block " + str(b) + "/" + str(image.shape[0])
-		acc = np.full(tileset.shape[1], -2*np.sum(image[b]) + image[b].size)
+		acc = (-2*np.sum(image[b]) + image[b].size) * np.ones(tileset.shape[1])
 		for i in range(image[b].size):
 			acc += 2*tileset[i]*(2*image[b].flat[i] - 1)
 		bestTile = np.argmax(np.absolute(acc))
