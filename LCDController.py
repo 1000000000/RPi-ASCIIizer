@@ -1,5 +1,6 @@
 # We are dealing with an Adafruit ST7565 LCD here
 import RPi.GPIO as GPIO
+import numpy as np
 import time
 GPIO.setmode(GPIO.BCM)
 
@@ -44,12 +45,26 @@ class LCDController:
 	CMD_NOP = 0xE3
 	CMD_TEST = 0xF0
 
+	LCDWIDTH = 128
+	LCDHEIGHT = 64
+
+	ST7565_STARTBYTES = 1
+
+	PAGEMMAP = [3, 2, 1, 0, 7, 6, 5, 4]
+
 	def __init__(self, sid, sclk, a0, rst, cs):
 		self.sid = sid
 		self.sclk = sclk
 		self.a0 = a0
 		self.rst = rst
 		self.cs = cs
+		self.usedPins = [sid,sclk,a0,rst,cs]
+
+	def __enter__(self):
+		return self
+
+	def __exit__(self, type, value, traceback):
+		self.close()
 
 	def init(self):
 		GPIO.setup(self.sid, GPIO.OUT)
@@ -63,42 +78,66 @@ class LCDController:
 		time.sleep(0.5)
 		GPIO.output(self.rst, True)
 		
-		lcdCommand(CMD_SET_BIAS_7)
-		lcdCommand(CMD_SET_ADC_NORMAL)
-		lcdCommand(CMD_SET_COM_NORMAL)
-		lcdCommand(CMD_SET_DISP_START_LINE)
+		self.lcdCommand(self.CMD_SET_BIAS_7)
+		self.lcdCommand(self.CMD_SET_ADC_NORMAL)
+		self.lcdCommand(self.CMD_SET_COM_NORMAL)
+		self.lcdCommand(self.CMD_SET_DISP_START_LINE)
 		
-		lcdCommand(CMD_SET_POWER_CONTROL | 0x4)
+		self.lcdCommand(self.CMD_SET_POWER_CONTROL | 0x4)
 		time.sleep(0.05)
 		
-		lcdCommand(CMD_SET_POWER_CONTROL | 0x6)
+		self.lcdCommand(self.CMD_SET_POWER_CONTROL | 0x6)
 		time.sleep(0.05)
 		
-		lcdCommand(CMD_SET_POWER_CONTROL | 0x7)
+		self.lcdCommand(self.CMD_SET_POWER_CONTROL | 0x7)
 		time.sleep(0.01)
 		
-		lcdCommand(CMD_SET_RESISTOR_RATIO | 0x6)
+		self.lcdCommand(self.CMD_SET_RESISTOR_RATIO | 0x6)
 	
-	def begin(self, contrast)
-		init()
-		lcdCommand(CMD_DISPLAY_ON)
-		lcdCommand(CMD_SET_ALLPTS_NORMAL)
-		lcdSetBrightness(contrast)
+	def begin(self, contrast):
+		self.init()
+		self.lcdCommand(self.CMD_DISPLAY_ON)
+		self.lcdCommand(self.CMD_SET_ALLPTS_NORMAL)
+		self.lcdSetBrightness(contrast)
+
+	def close(self):
+		GPIO.cleanup(self.usedPins)
 	
-	def writeToLCD(data):
+	def writeToLCD(self, data):
 		for i in range(7, -1, -1):
 			GPIO.output(self.sid, bool(data & (1 << i)))
 			GPIO.output(self.sclk, True)
 			GPIO.output(self.sclk, False)
 	
-	def lcdCommand(command):
+	def lcdCommand(self, command):
 		GPIO.output(self.a0, False)
-		writeToLCD(command)
+		self.writeToLCD(command)
 	
-	def lcdData(data):
+	def lcdData(self, data):
 		GPIO.output(self.a0, True)
-		writeToLCD(data)
+		self.writeToLCD(data)
 	
-	def lcdSetBrightness(contrast):
-		lcdCommand(CMD_SET_VOLUME_FIRST)
-		lcdCommand(CMD_SET_VOLUME_SECOND | (contrast & 0x3f))
+	def lcdSetBrightness(self, contrast):
+		self.lcdCommand(self.CMD_SET_VOLUME_FIRST)
+		self.lcdCommand(self.CMD_SET_VOLUME_SECOND | (contrast & 0x3f))
+
+	def displayImage(self, img):
+		packedImg = np.packbits(img.astype(np.uint8), axis=0)
+		for p in range(8):
+			self.lcdCommand(self.CMD_SET_PAGE | self.PAGEMMAP[p])
+			self.lcdCommand(self.CMD_SET_COLUMN_LOWER | (self.ST7565_STARTBYTES & 0xf))
+			self.lcdCommand(self.CMD_SET_COLUMN_UPPER | ((self.ST7565_STARTBYTES >> 4) & 0x0f))
+			self.lcdCommand(self.CMD_RMW)
+			for col in range(self.LCDWIDTH):
+				self.lcdData(packedImg[p,col])
+
+if __name__ == "__main__":
+	from imageConvert import convertImage
+	from PIL import Image
+	with LCDController(18,24,25,17,22) as lcd:
+		img = convertImage(Image.open("resources/image.png"))
+		lcd.begin(0x18)
+		lcd.displayImage(img)
+		print "Displayed!"
+		time.sleep(10)
+		print "Done!"
