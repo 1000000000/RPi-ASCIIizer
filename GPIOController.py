@@ -22,7 +22,6 @@ def doTakePicture(channel):
 
 GPIO.add_event_detect(BTN_PIN, GPIO.RISING, callback=doTakePicture, bouncetime=50)
 
-print "Using NumPy version: " + np.__version__ + " at " + np.__file__
 raw_input("Camera Ready! Press Enter to exit.\n")
 
 GPIO.cleanup()
